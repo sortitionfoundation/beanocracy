@@ -159,6 +159,11 @@ def render_html_from_template(template_path: Path, data: dict[str, Any], output_
         f.write(rendered_html)
 
 
+def page_name(start: int, people: list[PersonaData]) -> str:
+    person_names = ", ".join(p.name for p in people)
+    return f"Personas {start + 1} to {start + 3} ({person_names})"
+
+
 def generate_html_files(csv_path: Path, template_path: Path, index_template_path: Path, output_dir: Path) -> list[str]:
     """Generate HTML files for each row in the CSV file."""
     # Read data from CSV
@@ -168,12 +173,12 @@ def generate_html_files(csv_path: Path, template_path: Path, index_template_path
     for start in range(0, len(data_objects), NUM_PER_FILE):
         data_subset = data_objects[start:start + NUM_PER_FILE]
 
-        output_name = f"persona_{start:02d}.html"
+        output_name = f"persona_{start+1:02d}_{start+3:02d}.html"
         output_path = output_dir / output_name
 
         # Render the HTML file
         render_html_from_template(template_path, {"people": data_subset}, output_path)
-        files_written.append({"name": f"Personas {start + 1} to {start + 3}", "url": output_name})
+        files_written.append({"name": page_name(start, data_subset), "url": output_name})
         print(f"Generated: {output_path}")
 
     # now generate the HTML file
