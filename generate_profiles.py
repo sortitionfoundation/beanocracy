@@ -141,7 +141,7 @@ def read_csv_to_dataclasses(csv_path: Path) -> list[PersonaData]:
     return data_objects
 
 
-def render_html_from_template(template_path: Path, data_object: list[PersonaData], output_path: Path) -> None:
+def render_html_from_template(template_path: Path, data: dict[str, Any], output_path: Path) -> None:
     """Render an HTML file using a Jinja2 template and a dataclass instance."""
     # Get the directory containing the template
     template_dir = template_path.parent
@@ -152,18 +152,15 @@ def render_html_from_template(template_path: Path, data_object: list[PersonaData
     template = env.get_template(template_file)
 
     # Render the template with the data
-    rendered_html = template.render(people=data_object)
+    rendered_html = template.render(**data)
 
     # Write the rendered HTML to the output file
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(rendered_html)
 
 
-def generate_html_files(csv_path: Path, template_path: Path, output_dir: Path) -> None:
+def generate_html_files(csv_path: Path, template_path: Path, index_template_path: Path, output_dir: Path) -> list[str]:
     """Generate HTML files for each row in the CSV file."""
-    # Create output directory if it doesn't exist
-    os.makedirs(output_dir, exist_ok=True)
-
     # Read data from CSV
     data_objects = read_csv_to_dataclasses(csv_path)
     files_written = []
@@ -173,13 +170,14 @@ def generate_html_files(csv_path: Path, template_path: Path, output_dir: Path) -
 
         output_name = f"persona_{start:02d}.html"
         output_path = output_dir / output_name
-        files_written.append(output_name)
 
         # Render the HTML file
-        render_html_from_template(template_path, data_subset, output_path)
+        render_html_from_template(template_path, {"people": data_subset}, output_path)
+        files_written.append({"name": f"Personas {start + 1} to {start + 3}", "url": output_name})
         print(f"Generated: {output_path}")
 
-    return files_written
+    # now generate the HTML file
+    render_html_from_template(index_template_path, {"pages": files_written}, output_dir / "index.html")
 
 
 def main():
@@ -187,11 +185,14 @@ def main():
     current_dir = Path(__file__).parent
     csv_file = current_dir / "input.csv"
     template_file = current_dir / "persona.html.jinja2"
+    index_template_file = current_dir / "index.html.jinja2"
     output_directory = current_dir / "html"
     output_directory.mkdir(exist_ok=True)
 
+    # Create output directory if it doesn't exist
+    os.makedirs(output_directory, exist_ok=True)
     # Generate HTML files
-    generate_html_files(csv_file, template_file, output_directory)
+    generate_html_files(csv_file, template_file, index_template_file, output_directory)
 
     print(f"HTML generation complete. Files saved to: {output_directory}")
     return 0
