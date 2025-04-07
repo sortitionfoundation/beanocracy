@@ -6,17 +6,24 @@
 # "pdfkit",
 # ]
 # ///
+import argparse
 import csv
-import os
 import sys
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 from typing import Any
 
 import pdfkit
 from jinja2 import Environment, FileSystemLoader
 
-PDFKIT_OPTIONS = {"enable-local-file-access": ""}
+PDFKIT_OPTIONS = {
+    "enable-local-file-access": "",
+    "debug-javascript": "",
+    "encoding": "UTF-8",
+    "orientation": "Landscape",
+    "page-size": "A4",
+}
 
 NUM_PER_FILE = 3
 
@@ -54,6 +61,12 @@ ATTITUDE_EDUCATION_DICT = {
     "3": "Practical skills should be the focus.",
     "4": "Teach values and emotional intelligence first.",
 }
+
+
+class PDFOption(Enum):
+    NONE = 0
+    ONE = 1
+    MANY = 2
 
 
 @dataclass
@@ -170,13 +183,9 @@ def render_pdf_from_html(html_path: Path) -> Path:
     return pdf_path
 
 
-"""
-def render_pdf_from_many_html(html_paths: list[Path], pdf_path: Path) -> None:
+def render_pdf_from_many_html(html_paths: list[str], pdf_path: Path) -> None:
     " "" Convert HTML to PDF, return the path to the PDF " ""
-    pdf_path = html_path.with_suffix(".pdf")
-    pdfkit.from_file(str(html_path), str(pdf_path), options={"enable-local-file-access": ""})
-    return pdf_path
-"""
+    pdfkit.from_file(html_paths, str(pdf_path), options=PDFKIT_OPTIONS)
 
 
 def page_name(start: int, people: list[PersonaData]) -> str:
@@ -184,7 +193,13 @@ def page_name(start: int, people: list[PersonaData]) -> str:
     return f"Personas {start + 1} to {start + 3} ({person_names})"
 
 
-def generate_html_files(csv_path: Path, template_path: Path, index_template_path: Path, output_dir: Path) -> list[str]:
+def generate_html_files(
+    csv_path: Path, 
+    template_path: Path, 
+    index_template_path: Path, 
+    output_dir: Path, 
+    pdf_option: PDFOption
+) -> None:
     """Generate HTML files for each row in the CSV file."""
     # Read data from CSV
     data_objects = read_csv_to_dataclasses(csv_path)
@@ -198,31 +213,49 @@ def generate_html_files(csv_path: Path, template_path: Path, index_template_path
 
         # Render the HTML file
         render_html_from_template(template_path, {"people": data_subset}, output_path)
-        # render_pdf_from_html(output_path)
-        files_written.append({"name": page_name(start, data_subset), "url": output_name})
+        if pdf_option == PDFOption.MANY:
+            render_pdf_from_html(output_path)
+        files_written.append({"name": page_name(start, data_subset), "url": output_name, "path": output_path})
         print(f"Generated: {output_path}")
 
-    # now generate the HTML file
+    # now generate the HTML file for the index
     render_html_from_template(index_template_path, {"pages": files_written}, output_dir / "index.html")
+    if pdf_option == PDFOption.ONE:
+        render_pdf_from_many_html([str(f["path"]) for f in files_written], output_dir / "all.pdf")
 
 
-def main():
+
+def parse_args(argv: list[str]) -> PDFOption:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--one-pdf", action="store_true", help="Produce one combined PDF of all the HTML files.")
+    parser.add_argument("--many-pdf", action="store_true", help="Produce a PDF file for each HTML file.")
+    args = parser.parse_args(argv)
+    if args.one_pdf:
+        if args.many_pdf:
+            raise Exception("Cannot use --one-pdf and --many-pdf")
+        return PDFOption.ONE
+    if args.many_pdf:
+        return PDFOption.MANY
+    return PDFOption.NONE
+
+
+def main(argv):
+    pdf_option = parse_args(argv)
     # Configuration
     current_dir = Path(__file__).parent
     csv_file = current_dir / "input.csv"
     template_file = current_dir / "persona.html.jinja2"
     index_template_file = current_dir / "index.html.jinja2"
     output_directory = current_dir / "html"
-    output_directory.mkdir(exist_ok=True)
 
     # Create output directory if it doesn't exist
-    os.makedirs(output_directory, exist_ok=True)
+    output_directory.mkdir(exist_ok=True)
     # Generate HTML files
-    generate_html_files(csv_file, template_file, index_template_file, output_directory)
+    generate_html_files(csv_file, template_file, index_template_file, output_directory, pdf_option)
 
     print(f"HTML generation complete. Files saved to: {output_directory}")
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))
