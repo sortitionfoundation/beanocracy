@@ -24,8 +24,8 @@ EDUCATION_DICT = {
 }
 
 ATTITUDE_MONEY_DICT = {
-    "1": "The government should fund services through taxes.",
-    "2": "Everyone should contribute based on income or wealth.",
+    "1": "The government should completely fund services through taxes.",
+    "2": "The government should subsidise the cost but individuals need to pay something for their usage.",
     "3": "Corporations should pay for services they benefit from.",
     "4": "Individuals should pay for their own use.",
 }
@@ -117,6 +117,11 @@ class PersonaData:
     def attitude_education_text(self) -> str:
         return ATTITUDE_EDUCATION_DICT[self.attitude_education_value]
 
+    @property
+    def headshot_file(self) -> str:
+        for file_path in Path("headshots").glob(f"{self.index}*.png"):
+            return file_path.name
+        return "01-amina-flat-eco-nat.png"
 
 
 def read_csv_to_dataclasses(csv_path: Path) -> list[PersonaData]:
