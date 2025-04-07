@@ -119,7 +119,8 @@ class PersonaData:
 
     @property
     def headshot_file(self) -> str:
-        for file_path in Path("headshots").glob(f"{self.index}*.png"):
+        num_index = int(self.index)
+        for file_path in Path("headshots").glob(f"{num_index:02d}*.png"):
             return file_path.name
         return "01-amina-flat-eco-nat.png"
 
@@ -165,15 +166,20 @@ def generate_html_files(csv_path: Path, template_path: Path, output_dir: Path) -
 
     # Read data from CSV
     data_objects = read_csv_to_dataclasses(csv_path)
+    files_written = []
 
     for start in range(0, len(data_objects), NUM_PER_FILE):
         data_subset = data_objects[start:start + NUM_PER_FILE]
 
-        output_path = output_dir / f"persona_{start:02d}.html"
+        output_name = f"persona_{start:02d}.html"
+        output_path = output_dir / output_name
+        files_written.append(output_name)
 
         # Render the HTML file
         render_html_from_template(template_path, data_subset, output_path)
         print(f"Generated: {output_path}")
+
+    return files_written
 
 
 def main():
