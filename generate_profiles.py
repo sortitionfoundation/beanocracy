@@ -16,6 +16,8 @@ from typing import Any
 import pdfkit
 from jinja2 import Environment, FileSystemLoader
 
+PDFKIT_OPTIONS = {"enable-local-file-access": ""}
+
 NUM_PER_FILE = 3
 
 EDUCATION_DICT = {
@@ -164,8 +166,17 @@ def render_html_from_template(template_path: Path, data: dict[str, Any], output_
 def render_pdf_from_html(html_path: Path) -> Path:
     """ Convert HTML to PDF, return the path to the PDF """
     pdf_path = html_path.with_suffix(".pdf")
+    pdfkit.from_file(str(html_path), str(pdf_path), options=PDFKIT_OPTIONS)
+    return pdf_path
+
+
+"""
+def render_pdf_from_many_html(html_paths: list[Path], pdf_path: Path) -> None:
+    " "" Convert HTML to PDF, return the path to the PDF " ""
+    pdf_path = html_path.with_suffix(".pdf")
     pdfkit.from_file(str(html_path), str(pdf_path), options={"enable-local-file-access": ""})
     return pdf_path
+"""
 
 
 def page_name(start: int, people: list[PersonaData]) -> str:
@@ -187,7 +198,7 @@ def generate_html_files(csv_path: Path, template_path: Path, index_template_path
 
         # Render the HTML file
         render_html_from_template(template_path, {"people": data_subset}, output_path)
-        render_pdf_from_html(output_path)
+        # render_pdf_from_html(output_path)
         files_written.append({"name": page_name(start, data_subset), "url": output_name})
         print(f"Generated: {output_path}")
 
