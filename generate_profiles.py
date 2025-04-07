@@ -3,6 +3,7 @@
 # requires-python = ">=3.12"
 # dependencies = [
 # "Jinja2",
+# "pdfkit",
 # ]
 # ///
 import csv
@@ -12,6 +13,7 @@ from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import Any
 
+import pdfkit
 from jinja2 import Environment, FileSystemLoader
 
 NUM_PER_FILE = 3
@@ -159,6 +161,13 @@ def render_html_from_template(template_path: Path, data: dict[str, Any], output_
         f.write(rendered_html)
 
 
+def render_pdf_from_html(html_path: Path) -> Path:
+    """ Convert HTML to PDF, return the path to the PDF """
+    pdf_path = html_path.with_suffix(".pdf")
+    pdfkit.from_file(str(html_path), str(pdf_path), options={"enable-local-file-access": ""})
+    return pdf_path
+
+
 def page_name(start: int, people: list[PersonaData]) -> str:
     person_names = ", ".join(p.name for p in people)
     return f"Personas {start + 1} to {start + 3} ({person_names})"
@@ -178,6 +187,7 @@ def generate_html_files(csv_path: Path, template_path: Path, index_template_path
 
         # Render the HTML file
         render_html_from_template(template_path, {"people": data_subset}, output_path)
+        render_pdf_from_html(output_path)
         files_written.append({"name": page_name(start, data_subset), "url": output_name})
         print(f"Generated: {output_path}")
 
