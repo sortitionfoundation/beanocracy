@@ -139,19 +139,19 @@
 <body>
 
   <div class="page-container">
-  {% for person in people %}
+  
     <div class="profile-container">
       <div class="top-section">
         <img 
-          src="../headshots/{{ person.headshot_file }}" 
-          alt="Profile Image of {{ person.name }}" 
+          src="../headshots/01-amina-flat-eco-nat.png" 
+          alt="Profile Image of Joon" 
           class="profile-image"
         />
         <div class="profile-info">
-          <h1>{{ person.index }}. {{ person.name }}</h1>
-          <p>Age: {{ person.age }}, {{ person.gender }}</p>
-          <p>Town: {{ person.town }}</p>
-          <p>Province: {{ person.province }}</p>
+          <h1>100. Joon</h1>
+          <p>Age: 68, Non-binary</p>
+          <p>Town: Nexus</p>
+          <p>Province: Nexor</p>
         </div>
       </div>
 
@@ -159,10 +159,10 @@
         <h2>Demographics</h2>
         <div class="grid">
           <div class="label">Economic Stability:</div>
-          <div class="value">{{ person.economic }}</div>
+          <div class="value">Low</div>
 
           <div class="label">Education Level:</div>
-          <div class="value">{{ person.education }}: {{ person.education_text }}</div>
+          <div class="value">1: No formal education</div>
         </div>
       </div>
 
@@ -170,23 +170,23 @@
         <h2>Attitudes</h2>
         <div class="attitude-block">
           <h3>Money &amp; Fairness</h3>
-            <p><strong>{{ person.attitude_money_value }}:</strong> {{ person.attitude_money_text }}</p>
+            <p><strong>1:</strong> The government should completely fund services through taxes.</p>
         </div>
         <div class="attitude-block">
           <h3>Environment &amp; Daily Life</h3>
-            <p><strong>{{ person.attitude_environment_value }}:</strong> {{ person.attitude_environment_text }}</p>
+            <p><strong>2:</strong> Significant change is needed, but comfort matters too.</p>
         </div>
         <div class="attitude-block">
           <h3>Belonging &amp; Shared Space</h3>
-            <p><strong>{{ person.attitude_belonging_value }}:</strong> {{ person.attitude_belonging_text }}</p>
+            <p><strong>3:</strong> Developers should guide growth, as they bring investment.</p>
         </div>
         <div class="attitude-block">
           <h3>Education &amp; Next Generation</h3>
-            <p><strong>{{ person.attitude_education_value }}:</strong> {{ person.attitude_education_text }}</p>
+            <p><strong>1:</strong> Teach life skills and critical thinking.</p>
         </div>
       </div>
     </div>
-    {% endfor %}
+    
   </div>
 
 </body>
