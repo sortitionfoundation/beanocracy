@@ -3,7 +3,7 @@
 # requires-python = ">=3.12"
 # dependencies = [
 # "Jinja2",
-# "pdfkit",
+# "weasyprint",
 # ]
 # ///
 import argparse
@@ -14,16 +14,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-import pdfkit
+import weasyprint
 from jinja2 import Environment, FileSystemLoader
-
-PDFKIT_OPTIONS = {
-    "enable-local-file-access": "",
-    "debug-javascript": "",
-    "encoding": "UTF-8",
-    "orientation": "Landscape",
-    "page-size": "A4",
-}
 
 NUM_PER_FILE = 3
 
@@ -179,13 +171,22 @@ def render_html_from_template(template_path: Path, data: dict[str, Any], output_
 def render_pdf_from_html(html_path: Path) -> Path:
     """ Convert HTML to PDF, return the path to the PDF """
     pdf_path = html_path.with_suffix(".pdf")
-    pdfkit.from_file(str(html_path), str(pdf_path), options=PDFKIT_OPTIONS)
+    weasyprint.HTML(filename=str(html_path)).write_pdf(str(pdf_path))
     return pdf_path
 
 
 def render_pdf_from_many_html(html_paths: list[str], pdf_path: Path) -> None:
     " "" Convert HTML to PDF, return the path to the PDF " ""
-    pdfkit.from_file(html_paths, str(pdf_path), options=PDFKIT_OPTIONS)
+    all_pages = []
+    pdf_r = None
+    for html_path in html_paths:
+        pdf = weasyprint.HTML(filename=html_path)
+        pdf_r = pdf.render()
+        for page in pdf_r.pages:
+            all_pages.append(page)
+    assert pdf_r
+    pdf_file = pdf_r.copy(all_pages)
+    pdf_file.write_pdf(str(pdf_path))
 
 
 def page_name(start: int, people: list[PersonaData]) -> str:
